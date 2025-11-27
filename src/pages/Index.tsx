@@ -5,10 +5,19 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState('home');
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [serverName, setServerName] = useState('');
+  const [serverVersion, setServerVersion] = useState('1.20');
+  const [serverType, setServerType] = useState('');
+  const [maxPlayers, setMaxPlayers] = useState(20);
+  const [isCreating, setIsCreating] = useState(false);
+  const { toast } = useToast();
 
   const plugins = [
     { name: 'EssentialsX', description: 'Основные команды и утилиты', downloads: '50M+', icon: 'Wrench' },
@@ -64,7 +73,7 @@ const Index = () => {
             </button>
           </nav>
 
-          <Button>Войти</Button>
+          <Button onClick={() => setShowLoginDialog(true)}>Войти</Button>
         </div>
       </header>
 
@@ -202,12 +211,16 @@ const Index = () => {
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Название сервера</label>
-                  <Input placeholder="Мой крутой сервер" />
+                  <Input 
+                    placeholder="Мой крутой сервер" 
+                    value={serverName}
+                    onChange={(e) => setServerName(e.target.value)}
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Версия Minecraft</label>
-                  <Tabs defaultValue="1.20" className="w-full">
+                  <Tabs value={serverVersion} onValueChange={setServerVersion} className="w-full">
                     <TabsList className="grid w-full grid-cols-4">
                       <TabsTrigger value="1.20">1.20</TabsTrigger>
                       <TabsTrigger value="1.19">1.19</TabsTrigger>
@@ -220,7 +233,10 @@ const Index = () => {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Тип сервера</label>
                   <div className="grid grid-cols-2 gap-4">
-                    <Card className="cursor-pointer hover:border-primary transition-colors border-2">
+                    <Card 
+                      onClick={() => setServerType('vanilla')}
+                      className={`cursor-pointer hover:border-primary transition-colors border-2 ${serverType === 'vanilla' ? 'border-primary bg-primary/5' : ''}`}
+                    >
                       <CardHeader>
                         <div className="flex items-center gap-2">
                           <Icon name="Box" size={20} className="text-primary" />
@@ -229,7 +245,10 @@ const Index = () => {
                         <CardDescription className="text-xs">Чистый Minecraft</CardDescription>
                       </CardHeader>
                     </Card>
-                    <Card className="cursor-pointer hover:border-secondary transition-colors border-2">
+                    <Card 
+                      onClick={() => setServerType('spigot')}
+                      className={`cursor-pointer hover:border-secondary transition-colors border-2 ${serverType === 'spigot' ? 'border-secondary bg-secondary/5' : ''}`}
+                    >
                       <CardHeader>
                         <div className="flex items-center gap-2">
                           <Icon name="Wrench" size={20} className="text-secondary" />
@@ -238,7 +257,10 @@ const Index = () => {
                         <CardDescription className="text-xs">С плагинами</CardDescription>
                       </CardHeader>
                     </Card>
-                    <Card className="cursor-pointer hover:border-accent transition-colors border-2">
+                    <Card 
+                      onClick={() => setServerType('forge')}
+                      className={`cursor-pointer hover:border-accent transition-colors border-2 ${serverType === 'forge' ? 'border-accent bg-accent/5' : ''}`}
+                    >
                       <CardHeader>
                         <div className="flex items-center gap-2">
                           <Icon name="Zap" size={20} className="text-accent" />
@@ -247,7 +269,10 @@ const Index = () => {
                         <CardDescription className="text-xs">С модами</CardDescription>
                       </CardHeader>
                     </Card>
-                    <Card className="cursor-pointer hover:border-primary transition-colors border-2">
+                    <Card 
+                      onClick={() => setServerType('fabric')}
+                      className={`cursor-pointer hover:border-primary transition-colors border-2 ${serverType === 'fabric' ? 'border-primary bg-primary/5' : ''}`}
+                    >
                       <CardHeader>
                         <div className="flex items-center gap-2">
                           <Icon name="Package" size={20} className="text-primary" />
@@ -261,12 +286,46 @@ const Index = () => {
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Максимум игроков</label>
-                  <Input type="number" defaultValue="20" min="1" max="100" />
+                  <Input 
+                    type="number" 
+                    value={maxPlayers}
+                    onChange={(e) => setMaxPlayers(Number(e.target.value))}
+                    min="1" 
+                    max="100" 
+                  />
                 </div>
 
-                <Button className="w-full" size="lg">
-                  <Icon name="Rocket" size={20} className="mr-2" />
-                  Создать сервер
+                <Button 
+                  className="w-full" 
+                  size="lg"
+                  onClick={() => {
+                    if (!serverName.trim()) {
+                      toast({ title: "Ошибка", description: "Введите название сервера", variant: "destructive" });
+                      return;
+                    }
+                    if (!serverType) {
+                      toast({ title: "Ошибка", description: "Выберите тип сервера", variant: "destructive" });
+                      return;
+                    }
+                    setIsCreating(true);
+                    setTimeout(() => {
+                      setIsCreating(false);
+                      toast({ 
+                        title: "Сервер создан!", 
+                        description: `${serverName} (${serverType}, v${serverVersion}) готов к запуску` 
+                      });
+                      setServerName('');
+                      setServerType('');
+                    }, 2000);
+                  }}
+                  disabled={isCreating}
+                >
+                  {isCreating ? (
+                    <Icon name="Loader2" size={20} className="mr-2 animate-spin" />
+                  ) : (
+                    <Icon name="Rocket" size={20} className="mr-2" />
+                  )}
+                  {isCreating ? 'Создаю сервер...' : 'Создать сервер'}
                 </Button>
               </CardContent>
             </Card>
@@ -350,6 +409,34 @@ const Index = () => {
           </div>
         </div>
       </footer>
+
+      <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Вход в аккаунт</DialogTitle>
+            <DialogDescription>Войди, чтобы управлять своими серверами</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Email</label>
+              <Input type="email" placeholder="your@email.com" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Пароль</label>
+              <Input type="password" placeholder="••••••••" />
+            </div>
+            <Button className="w-full">
+              <Icon name="LogIn" size={18} className="mr-2" />
+              Войти
+            </Button>
+            <div className="text-center">
+              <button className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                Нет аккаунта? Зарегистрироваться
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
