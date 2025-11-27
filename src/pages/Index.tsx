@@ -12,6 +12,7 @@ import Icon from '@/components/ui/icon';
 const Index = () => {
   const [activeSection, setActiveSection] = useState('home');
   const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [serverName, setServerName] = useState('');
   const [serverVersion, setServerVersion] = useState('1.20');
   const [serverType, setServerType] = useState('');
@@ -410,13 +411,24 @@ const Index = () => {
         </div>
       </footer>
 
-      <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+      <Dialog open={showLoginDialog} onOpenChange={(open) => {
+        setShowLoginDialog(open);
+        if (!open) setIsRegisterMode(false);
+      }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Вход в аккаунт</DialogTitle>
-            <DialogDescription>Войди, чтобы управлять своими серверами</DialogDescription>
+            <DialogTitle>{isRegisterMode ? 'Регистрация' : 'Вход в аккаунт'}</DialogTitle>
+            <DialogDescription>
+              {isRegisterMode ? 'Создай аккаунт для управления серверами' : 'Войди, чтобы управлять своими серверами'}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            {isRegisterMode && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Имя пользователя</label>
+                <Input placeholder="Твой игровой ник" />
+              </div>
+            )}
             <div className="space-y-2">
               <label className="text-sm font-medium">Email</label>
               <Input type="email" placeholder="your@email.com" />
@@ -425,13 +437,32 @@ const Index = () => {
               <label className="text-sm font-medium">Пароль</label>
               <Input type="password" placeholder="••••••••" />
             </div>
-            <Button className="w-full">
-              <Icon name="LogIn" size={18} className="mr-2" />
-              Войти
+            {isRegisterMode && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Повтори пароль</label>
+                <Input type="password" placeholder="••••••••" />
+              </div>
+            )}
+            <Button 
+              className="w-full"
+              onClick={() => {
+                toast({ 
+                  title: isRegisterMode ? 'Регистрация успешна!' : 'Вход выполнен!', 
+                  description: isRegisterMode ? 'Добро пожаловать! Теперь можешь создавать серверы' : 'С возвращением!'
+                });
+                setShowLoginDialog(false);
+                setIsRegisterMode(false);
+              }}
+            >
+              <Icon name={isRegisterMode ? "UserPlus" : "LogIn"} size={18} className="mr-2" />
+              {isRegisterMode ? 'Зарегистрироваться' : 'Войти'}
             </Button>
             <div className="text-center">
-              <button className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                Нет аккаунта? Зарегистрироваться
+              <button 
+                onClick={() => setIsRegisterMode(!isRegisterMode)}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                {isRegisterMode ? 'Уже есть аккаунт? Войти' : 'Нет аккаунта? Зарегистрироваться'}
               </button>
             </div>
           </div>
